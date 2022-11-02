@@ -7,8 +7,7 @@
     This program expects the following API URLs as follows:
 
         https://<ip-address>/mgmt/tm/ltm/pool/members/stats
-        https://<ip-address>/mgmt/tm/ltm/virtual
-    
+        https://<ip-address>/mgmt/tm/ltm/virtual  
 """
 
 # Author: Wayne Bellward
