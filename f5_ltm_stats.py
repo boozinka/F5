@@ -3,6 +3,12 @@
 """ Imports an F5 LTM Virtual Server details and Pool stats from API. Coverts
     the JSON output to a dictionary and extracts the relevant information to
     ascertain if that Virtual Server/LTM Pool is in use or not.
+
+    This program expects the following API URLs as follows:
+
+        https://<ip-address>/mgmt/tm/ltm/pool/members/stats
+        https://<ip-address>/mgmt/tm/ltm/virtual
+    
 """
 
 # Author: Wayne Bellward
@@ -13,7 +19,6 @@ import os
 import sys
 import pathlib
 import ipaddress
-from pprint import pprint
 from getpass import getpass
 from datetime import datetime
 from f5api_call import f5api_get_call
@@ -68,9 +73,9 @@ def write_api(myapi, dict_type):
             # Write each line to the file
             file.writelines(line)
                 
-    print('\nThe file has been written to timestamped "', filename,
-          '" in the local directory', sep = '')
-    input('\nPress Enter to return to main menu.')
+    print('\nThe file has been written to timestamped ', filename,
+          ' in the local directory', sep = '')
+    input('\nPress enter to return to write menu.')
 
 
 def get_api_params():
@@ -90,9 +95,9 @@ def get_api_params():
     # Input IP address of F5 LTM device, and loop until IP is valid
     while not ipaddr:
         try:
-            ipaddr = ipaddress.ip_network(input('Please enter the IP address of'
-                                                ' the of the F5 LTM you want to'
-                                                ' make the API call on: '))
+            ipaddr = ipaddress.ip_network(input('Please enter the IP address '
+                                                'of the F5 LTM you want to '
+                                                'make the API call on: '))
         except ValueError:
             ipaddr = False
             print('You entered an invalid IP address, please try again.\n')
@@ -101,17 +106,6 @@ def get_api_params():
     ipaddr = str(ipaddr).split('/')[0]
 
     return username, passwd, ipaddr
-
-
-def get_uri_ext(ipaddr):
-
-    """ Asks the user to input the URI extension to append to the base URI """
-
-    # Input URI extension for specific API call
-    print('\nThe Base URI is: https://{}/mgmt/tm/ltm/'.format(ipaddr))
-    uri_ext = input('Please enter the URI extension: ')
-
-    return uri_ext
 
     
 def create_virt_dict(ltm_virt):
@@ -188,15 +182,15 @@ def xref_pools(virt_dict, ltm_stats):
     return virt_act_dict, virt_inact_dict
 
 
-def main_menu():
-    # Setup Main Menu Loop
+def write_menu():
+    # Setup Write Menu Loop
 
     os.system('cls')
     mm_choice = None
     while mm_choice != "q":
         print(
             """
-            Main Menu
+            Write Menu
             Q - Quit.
             1 - Write the active virtual servers to a file.
             2 - Write the inactive virtual servers to a file.
@@ -215,21 +209,13 @@ def main():
     # Get input parameters for the F5 REST API call
     username, passwd, ipaddr = get_api_params()
 
-    # Get URI extension
-    print('\nURI Extension for the LTM Pool Stats REST API Call')
-    print('-' * 55)
-    uri_ext = get_uri_ext(ipaddr)
-    os.system('cls')
+    uri_ext = 'pool/members/stats'
 
     # Make REST API Calls for LTM Pool stats
     ltm_stats = f5api_get_call(username, passwd, ipaddr, uri_ext)
     os.system('cls')
 
-    # Get new URI extension
-    print('\nURI Extension for the Virtual Server Info REST API Call')
-    print('-' * 55)
-    uri_ext = get_uri_ext(ipaddr)
-    os.system('cls')
+    uri_ext = 'virtual'
     
     # Make REST API Calls for Virtual server details
     my_ltm_virt = f5api_get_call(username, passwd, ipaddr, uri_ext)
@@ -241,10 +227,10 @@ def main():
     # Create an active & inactive dictionary of virtual srvs based on pool stats
     virt_act_dict, virt_inact_dict = xref_pools(virt_dict, ltm_stats)
 
-    mm_val = None
-    while mm_val != 'q':
-        mm_val = main_menu()
-        match mm_val:
+    wm_val = None
+    while wm_val != 'q':
+        wm_val = write_menu()
+        match wm_val:
             case '1':
                 os.system('cls')
                 print('\nPrint active virtual servers')
@@ -260,7 +246,7 @@ def main():
                 print('\Invalid input please try again.')
                 input('\nPress Enter to try again.')
 
-    input('\nPress Enter to exit script ')
+    input('\nPress enter to exit script ')
     
 
 if __name__ == "__main__":
