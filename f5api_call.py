@@ -45,7 +45,7 @@ def f5api_get_call(username, passwd, ipaddr, uri_ext):
     except requests.exceptions.ConnectionError as err_c:
         os.system('cls')
         print ('\nError Connecting: {}'.format(err_c))
-        print('\nIs the F5 LTM IP address correct?')
+        print('\nIs the F5 LTM IP address correct, or reachable?')
         input('\nPress Enter to Exit')
         raise SystemExit(err_c)
     except requests.exceptions.Timeout as err_t:
