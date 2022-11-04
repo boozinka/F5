@@ -100,7 +100,7 @@ def write_api(myapi, dict_type):
                 
     print('\nThe file has been written to timestamped ', filename,
           ' in the local directory', sep = '')
-    input('\nPress enter to return to write menu.')
+    input('\nPress enter to return to options menu.')
 
 
 def write_poolmem_stats(virt_dict):
@@ -153,9 +153,55 @@ def write_poolmem_stats(virt_dict):
                 
     print('\nThe file has been written to timestamped ', filename,
           ' in the local directory', sep = '')
-    input('\nPress enter to return to write menu.')
+    input('\nPress enter to return to options menu.')
 
 
+def print_poolmem_stats(virt_dict):
+    
+    """ Unpack passed dictionary and print the stats of all pool members for a
+        single virtual server to the screen.
+    """
+
+    # Ask user to input the virtual server name
+    my_virt_stats = False
+    while not my_virt_stats:
+        
+        os.system('cls')
+        virt_id = input('\n\nThe virtual server name is case sensitive.\n\n'
+                        'Please enter the name of the virtual server you '
+                        'wish to view the pool member stats for: '
+                        )
+        try:
+            my_virt_stats = virt_dict[virt_id]
+        except KeyError:
+            input('\nVirtual server does not exist, press enter to try again.')
+
+    # Print the formatted output to the screen
+    os.system('cls')
+    print('\n\n')
+    print('='*50)
+    print(f"{'Virtual Server:':<18}{virt_id:<30}")
+    print('='*50)
+    print()
+    
+    pool_name = my_virt_stats['virt_pool']['pool_name'].split('/')[2]
+    print(f"{'':<10}{'LTM Pool:':<10}{pool_name:<30}")
+    print(f"{'':<10}{'-'*40:<40}")
+    print()
+    
+    pool_mems = my_virt_stats['virt_pool']['pool_mems']
+    for mem in pool_mems:
+        for mem_id, stats in mem.items():
+            print()
+            print(f"{'':<20}{'Member:':<10}{mem_id:<20}")
+            print(f"{'':<20}{'-'*30:<30}")
+            print()
+            for stat, value in stats.items():
+                print(f"{'':<30}{stat:<22}{':':<3}{value:<10}")
+    
+    input('\nPress enter to return to options menu.')
+
+    
 def get_api_params():
 
     """ Function to get input parameters for the F5 REST API call """
@@ -298,13 +344,14 @@ def write_menu():
     while mm_choice != "q":
         print(
             """
-            Write Menu
-            -----------
+            Options Menu
+            -------------
             
             Q - Quit.
             1 - Write the active virtual servers to a file.
             2 - Write the inactive virtual servers to a file.
-            3 - Write all LTM pool member stats
+            3 - Write all LTM pool member stats.
+            4 - Print a virtual servers pool members stats to the screen.
             """
         )
 
@@ -354,7 +401,11 @@ def main():
             case '3':
                 os.system('cls')
                 print('\nWriting LTM pool member stats to a .csv')
-                write_poolmem_stats(virt_dict)                
+                write_poolmem_stats(virt_dict)
+            case '4':
+                os.system('cls')
+                print('\nPrinting virtual servers pool members stats.')
+                print_poolmem_stats(virt_dict)   
             case 'q':
                 break
             case _:
