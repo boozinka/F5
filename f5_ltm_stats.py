@@ -385,7 +385,6 @@ def main():
     # Create an active & inactive dictionary of virtual srvs based on pool stats
     virt_act_dict, virt_inact_dict = xref_pools(virt_dict, ltm_stats)
 
-
     wm_val = None
     while wm_val != 'q':
         wm_val = write_menu()
