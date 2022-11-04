@@ -162,6 +162,16 @@ def print_poolmem_stats(virt_dict):
         single virtual server to the screen.
     """
 
+    # Initalise Varibles
+    stat_names = {'serverside_bitsin': 'Server Side Bits In',
+                  'serverside_bitsout': 'Server Side Bits Out',
+                  'serverside_curconns': 'Server Side Current Conns',
+                  'serverside_maxconns': 'Server Side Max Conns',
+                  'serverside_pktsin': 'Server Side Packets In',
+                  'serverside_pktsout': 'Server Side Packets Out',
+                  'serverside_totconns': 'Server Side Total Conns'
+                  }
+
     # Ask user to input the virtual server name
     my_virt_stats = False
     while not my_virt_stats:
@@ -179,14 +189,14 @@ def print_poolmem_stats(virt_dict):
     # Print the formatted output to the screen
     os.system('cls')
     print('\n\n')
-    print('='*50)
+    print('='*60)
     print(f"{'Virtual Server:':<18}{virt_id:<30}")
-    print('='*50)
+    print('='*60)
     print()
     
     pool_name = my_virt_stats['virt_pool']['pool_name'].split('/')[2]
     print(f"{'':<10}{'LTM Pool:':<10}{pool_name:<30}")
-    print(f"{'':<10}{'-'*40:<40}")
+    print(f"{'':<10}{'-'*50:<50}")
     print()
     
     pool_mems = my_virt_stats['virt_pool']['pool_mems']
@@ -194,10 +204,10 @@ def print_poolmem_stats(virt_dict):
         for mem_id, stats in mem.items():
             print()
             print(f"{'':<20}{'Member:':<10}{mem_id:<20}")
-            print(f"{'':<20}{'-'*30:<30}")
+            print(f"{'':<20}{'-'*40:<40}")
             print()
             for stat, value in stats.items():
-                print(f"{'':<30}{stat:<22}{':':<3}{value:<10}")
+                print(f"{'':<30}{stat_names[stat]:<30}{':':<3}{value:<10}")
     
     input('\nPress enter to return to options menu.')
 
