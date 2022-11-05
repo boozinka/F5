@@ -7,8 +7,7 @@
     This program expects the following API URLs as follows:
 
         https://<ip-address>/mgmt/tm/ltm/pool/members/stats
-        https://<ip-address>/mgmt/tm/ltm/virtual
-    
+        https://<ip-address>/mgmt/tm/ltm/virtual 
 """
 
 # Author: Wayne Bellward
@@ -19,7 +18,6 @@ import os
 import sys
 import pathlib
 import ipaddress
-from pprint import pprint
 from getpass import getpass
 from datetime import datetime
 from f5api_call import f5api_get_call
@@ -48,12 +46,8 @@ def write_api(myapi, dict_type):
     'suffixed to the filename along with the date and time: '
 
     filename, dt_str = get_filename(message)
-
     suffix = '_'+ dict_type + '_' + dt_str
-
     os.system('cls')
-
-    
     filename = filename + suffix +'.csv'
 
     header = ['Virtual Server Name', ',',
@@ -116,9 +110,7 @@ def write_poolmem_stats(virt_dict):
               
     filename, dt_str = get_filename(message)
     suffix = '_' + dt_str
-    
     filename = filename + suffix +'.csv'
-
     header = ['Pool Member Id', ',',
               'Server Side Bits In', ',',
               'Server Side Bits Out', ',',
@@ -284,12 +276,11 @@ def xref_pools(virt_dict, ltm_stats):
         Virtual Servers which are not in use.
     """
 
-    # Copy virt_dict
+    # Shallow copy virt_dict (virt_dict is also updated as part of this function)
     virt_inact_dict = virt_dict.copy()
 
     # Intialise varibles
     virt_act_dict = {}
-    #eval_list = []
 
     # X-Ref the new virt dict with LTM pools to create active and inactive dict
     for virt, values in virt_dict.items():
@@ -301,6 +292,8 @@ def xref_pools(virt_dict, ltm_stats):
         ltm_mems = ltm_stats['entries'][pool_ref_stats]['nestedStats']['entries']\
                    [pool_ref_mems]['nestedStats']['entries']
 
+        # Set virtual server status flag to False at the beginning iteration
+        virt_status = False
         for mem, params in ltm_mems.items():
             mem_stats = params['nestedStats']['entries']
 
@@ -335,13 +328,19 @@ def xref_pools(virt_dict, ltm_stats):
             eval_list = [ss_bitsin, ss_bitsout, ss_curconns, ss_maxconns,
                          ss_pktsin, ss_pktsout, ss_totconns,]
             
-            # If any of the stats are not 0, pop that virt into an active dict
+            # If any of the stats are not 0, set 'virt_status' to True as the
+            # virtual server must be active
             if any(v != 0 for v in eval_list):
-                virt_act_dict.update({virt: virt_inact_dict.pop(virt)})
+                virt_status = True
                 eval_list = []
-                break
             else:
                 eval_list = []
+
+        # If virt_status flag is true, pop that virt into an active dict
+        if virt_status == True:
+            virt_act_dict.update({virt: virt_inact_dict.pop(virt)})
+        else:
+            continue
 
     return virt_act_dict, virt_inact_dict
 
@@ -377,12 +376,14 @@ def main():
     # Get input parameters for the F5 REST API call
     username, passwd, ipaddr = get_api_params()
 
+    # Hard set the URI for the first API call
     uri_ext = 'pool/members/stats'
 
     # Make REST API Calls for LTM Pool stats
     ltm_stats = f5api_get_call(username, passwd, ipaddr, uri_ext)
     os.system('cls')
 
+    # Change the URI for the second API call
     uri_ext = 'virtual'
     
     # Make REST API Calls for Virtual server details
