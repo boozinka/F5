@@ -71,7 +71,11 @@ def write_api(myapi, dict_type):
             # Unpack dictionary
             virt_dest = params['virt_dest'].split('/')[2]
             virt_desc = params['virt_desc']
-            pool_name = params['virt_pool']['pool_name'].split('/')[2]
+            try:
+                pool_name = params['virt_pool']['pool_name'].split('/')[2]
+            except IndexError:
+                pool_name = params['virt_pool']['pool_name']
+            
             pool_mems = params['virt_pool']['pool_mems']
 
             # Separate IP and port in the virtual server destination
@@ -185,8 +189,12 @@ def print_poolmem_stats(virt_dict):
     print(f"{'Virtual Server:':<18}{virt_id:<30}")
     print('='*60)
     print()
-    
-    pool_name = my_virt_stats['virt_pool']['pool_name'].split('/')[2]
+
+    try:
+        pool_name = my_virt_stats['virt_pool']['pool_name'].split('/')[2]
+    except IndexError:
+        pool_name = my_virt_stats['virt_pool']['pool_name']
+        
     print(f"{'':<10}{'LTM Pool:':<10}{pool_name:<30}")
     print(f"{'':<10}{'-'*50:<50}")
     print()
@@ -248,7 +256,10 @@ def create_virt_dict(ltm_virt):
     # Iterate over virtual server api response and create new dict with our info
     for virt in virt_list:
         virt_name = virt['name']
-        virt_pool = virt['pool']
+        try:
+            virt_pool = virt['pool']
+        except KeyError:
+            virt_pool = 'NO POOL CONFIGURED'
         virt_dest = virt['destination']
         try:
             virt_desc = virt['description']
@@ -270,10 +281,9 @@ def create_virt_dict(ltm_virt):
 def xref_pools(virt_dict, ltm_stats):
 
     """ Runs through the virt_dict and cross references it's pools against the
-        LTM Pool Stats to see if any or the virtual servers pools have traffic
-        against them, if a virtual servers pool has traffic then against it,
-        it is deleted from the virt_dict, as we are only interested in
-        Virtual Servers which are not in use.
+        LTM Pool Stats to see if any of the virtual servers pools have traffic
+        against them. Based on the results the dictionary is split into two new
+        dictionaries, 'active' and 'inactive'.
     """
 
     # Shallow copy virt_dict (virt_dict is also updated as part of this function)
@@ -288,9 +298,16 @@ def xref_pools(virt_dict, ltm_stats):
         pool_ref_prefix = 'https://localhost/mgmt/tm/ltm/pool/members/'
         pool_ref_stats = pool_ref_prefix + pool_ref + '/stats'
         pool_ref_mems = pool_ref_prefix +  pool_ref + '/members/stats'
-        
-        ltm_mems = ltm_stats['entries'][pool_ref_stats]['nestedStats']['entries']\
-                   [pool_ref_mems]['nestedStats']['entries']
+
+        # Unpack Pool Members and error handle in the event there are none.
+        try:
+            ltm_mems = ltm_stats['entries'][pool_ref_stats]['nestedStats']['entries']\
+                       [pool_ref_mems]['nestedStats']['entries']
+        except KeyError:
+            virt_inact_dict[virt]['virt_pool']['pool_mems'].append({'': {}})
+            mem = {}
+            virt_status = False
+            break
 
         # Set virtual server status flag to False at the beginning iteration
         virt_status = False
