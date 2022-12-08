@@ -3,7 +3,7 @@
 """ Makes an API call to an F5 LTM appliance and returns results """
 
 # Author: Wayne Bellward
-# Date: 31/10/2022
+# Date: 08/12/2022
 
 import os
 import requests
@@ -12,27 +12,6 @@ from pprint import pprint
 from getpass import getpass
 from datetime import datetime
 from urllib3.exceptions import InsecureRequestWarning
-
-
-def get_token(username, passwd, ipaddr):
-
-    """ Get F5 authentication token """
-
-    body = {
-        "username": username,
-        "password": passwd,
-        "loginProviderName": "tmos"
-    }
-
-    token_response = requests.post(
-        f'https://{ipaddr}/mgmt/shared/authn/login',
-        verify=False,
-        auth=(username, passwd),json=body)\
-        .json()
-
-    token = token_response['token']['token']
-
-    return token
     
 
 def f5api_get_call(ipaddr, token, uri_ext):
