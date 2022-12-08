@@ -34,8 +34,10 @@ def main():
     """ Main Program """
 
     print('This module is designed to be imported, not run directly')
+    input()
     
 
 if __name__ == "__main__":
 
     main()
+
